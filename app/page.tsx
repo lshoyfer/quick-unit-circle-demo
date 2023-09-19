@@ -1,95 +1,69 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
+
+import { useCallback, useEffect, useReducer, useRef } from "react";
+import { Graphics, Stage, useTick } from "@pixi/react";
+
+type rayPositionState = {
+	x: number,
+	y: number,
+}
+
+const posReducer = (_, { data }): rayPositionState => data;
+
+function Rays() {
+  	const [positions, updatePositions] = useReducer(posReducer, { x: 950, y: 500 });
+  	const iter = useRef(0);
+
+  	useTick((delta) => {
+    	const i = (iter.current += 0.0075 * delta);
+
+ 		updatePositions({
+			type: "update",
+			data: {
+				x: 500 + Math.cos(i) * 450,
+				y: 500 - Math.sin(i) * 450,
+			}
+		});
+	});
+	const drawRay = useCallback((g) => {
+		g.clear();
+		
+		g.lineStyle({ width: 5, color: 0x800080, cap: "round" });
+
+		// main ray
+		g.moveTo(500, 500);
+		g.lineTo(positions.x, positions.y);
+
+		// y-component
+		g.lineStyle({ width: 3, color: 0x3eed6c, cap: "round", alpha: 0.5 });
+		g.moveTo(positions.x, 500);
+		g.lineTo(positions.x, positions.y);
+		
+	}, [positions]);
+
+	return <Graphics draw={drawRay} />
+}
 
 export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+	const drawAxisCircle = useCallback((g) => {
+ 	    g.clear();
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+		g.lineStyle(3, 0x000000);
+		g.drawCircle(500, 500, 450);
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+		// x-axis
+		g.moveTo(50, 500);
+		g.lineTo(950, 500);
+	
+		// y-axis
+		g.moveTo(500, 50);
+		g.lineTo(500, 950);
+	}, []);
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+  	return (
+		<Stage className="canvas" width={1000} height={1000} options={{ backgroundAlpha: 0 }}>
+			<Graphics draw={drawAxisCircle} />
+			<Rays />
+		</Stage>
+	);
 }
