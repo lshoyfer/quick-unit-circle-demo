@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Graphics, Stage, useTick } from "@pixi/react";
 
 type rayPositionState = {
@@ -10,20 +10,22 @@ type rayPositionState = {
 
 const posReducer = (_, { data }): rayPositionState => data;
 
-function Rays() {
+function Rays({ paused, toggleAnimation }) {
   	const [positions, updatePositions] = useReducer(posReducer, { x: 950, y: 500 });
   	const iter = useRef(0);
 
   	useTick((delta) => {
-    	const i = (iter.current += 0.0075 * delta);
+		if (!paused) {
+			const i = (iter.current += 0.0075 * delta);
 
- 		updatePositions({
-			type: "update",
-			data: {
-				x: 500 + Math.cos(i) * 450,
-				y: 500 - Math.sin(i) * 450,
-			}
-		});
+			updatePositions({
+				type: "update",
+				data: {
+					x: 500 + Math.cos(i) * 450,
+					y: 500 - Math.sin(i) * 450,
+				}
+			});
+		}
 	});
 	const drawRay = useCallback((g) => {
 		g.clear();
@@ -45,6 +47,12 @@ function Rays() {
 }
 
 export default function Home() {
+	const [paused, setPausedAnimation] = useState(false);
+
+	const toggleAnimation = () => {
+		setPausedAnimation(!paused);
+	}
+
 	const drawAxisCircle = useCallback((g) => {
  	    g.clear();
 
@@ -61,9 +69,12 @@ export default function Home() {
 	}, []);
 
   	return (
-		<Stage className="canvas" width={1000} height={1000} options={{ backgroundAlpha: 0 }}>
-			<Graphics draw={drawAxisCircle} />
-			<Rays />
-		</Stage>
+		<>
+			<button onClick={toggleAnimation}>Toggle</button>
+			<Stage className="canvas" width={1000} height={1000} options={{ backgroundAlpha: 0 }}>
+				<Graphics draw={drawAxisCircle} />
+				<Rays paused={paused} toggleAnimation={toggleAnimation} />
+			</Stage>
+		</>
 	);
 }
